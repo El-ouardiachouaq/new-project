@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: diffusion-calculator
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn main:app
+    envVars:
+      - key: FLASK_APP
+        value: main.py
+      - key: FLASK_ENV
+        value: production
+      - key: SECRET_KEY
+        value: 15192521e886049d474647e23833e459f8b2c8b24d2ecf26
+      - key: EMAIL_USER
+        value: elouardiachouaq@gmail.com
+      - key: EMAIL_PASSWORD
+        value: dsic cdzy ecvk lkgx
+      - key: MAIL_DEFAULT_SENDER
+        value: elouardiachouaq@gmail.com
+      - key: MAIL_SERVER
+        value: smtp.gmail.com
+      - key: MAIL_PORT
+        value: 587
+      - key: MAIL_USE_TLS
+        value: True 
