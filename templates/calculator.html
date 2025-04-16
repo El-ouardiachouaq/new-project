@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+
+{% block title %}Calculateur{% endblock %}
+
+{% block content %}
+<style>
+    .calculator-container {
+        min-height: 100vh;
+        padding: 20px;
+        position: relative;
+    }
+    
+    #molecules-canvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 0;
+    }
+    
+    .calculator-form {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border-radius: 15px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        padding: 30px;
+        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        position: relative;
+        z-index: 1;
+    }
+    
+    .form-control {
+        background: rgba(255, 255, 255, 0.1) !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        color: white !important;
+    }
+    
+    .form-control:focus {
+        background: rgba(255, 255, 255, 0.2) !important;
+        border-color: rgba(255, 255, 255, 0.3) !important;
+        box-shadow: 0 0 0 0.25rem rgba(255, 255, 255, 0.1) !important;
+    }
+    
+    .form-control::placeholder {
+        color: rgba(255, 255, 255, 0.7) !important;
+    }
+    
+    .form-label {
+        color: white;
+        font-weight: 500;
+    }
+</style>
+
+<div class="calculator-container">
+    <canvas id="molecules-canvas"></canvas>
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="calculator-form">
+                <h2 class="text-center mb-4">Calculateur de Diffusion</h2>
+                <form method="POST" action="{{ url_for('main.calculate') }}">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="x_A" class="form-label">Fraction Molaire (x_A)</label>
+                            <input type="number" step="0.001" class="form-control" id="x_A" name="x_A" value="0.25" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="T" class="form-label">Température (K)</label>
+                            <input type="number" step="0.1" class="form-control" id="T" name="T" value="313" required>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="D_AB0" class="form-label">D_AB0 (cm²/s)</label>
+                            <input type="number" step="0.000001" class="form-control" id="D_AB0" name="D_AB0" value="0.000021" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="D_BA0" class="form-label">D_BA0 (cm²/s)</label>
+                            <input type="number" step="0.000001" class="form-control" id="D_BA0" name="D_BA0" value="0.0000267" required>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="rA" class="form-label">Rayon Moléculaire A (Å)</label>
+                            <input type="number" step="0.01" class="form-control" id="rA" name="rA" value="1.4311" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="rB" class="form-label">Rayon Moléculaire B (Å)</label>
+                            <input type="number" step="0.01" class="form-control" id="rB" name="rB" value="0.92" required>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="D_AB_exp" class="form-label">D_AB Expérimental (cm²/s)</label>
+                            <input type="number" step="0.000001" class="form-control" id="D_AB_exp" name="D_AB_exp" value="0.0000133" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="a_AB" class="form-label">Paramètre d'Interaction A-B</label>
+                            <input type="number" step="0.1" class="form-control" id="a_AB" name="a_AB" value="-10.7575" required>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="a_BA" class="form-label">Paramètre d'Interaction B-A</label>
+                            <input type="number" step="0.1" class="form-control" id="a_BA" name="a_BA" value="194.5302" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="q_A" class="form-label">Paramètre de Surface A</label>
+                            <input type="number" step="0.1" class="form-control" id="q_A" name="q_A" value="1.432" required>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="q_B" class="form-label">Paramètre de Surface B</label>
+                            <input type="number" step="0.1" class="form-control" id="q_B" name="q_B" value="1.4" required>
+                        </div>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-custom">Calculer</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Three.js molecules animation
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({
+        canvas: document.querySelector('#molecules-canvas'),
+        alpha: true
+    });
+    
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
+
+    // Create molecules
+    const molecules = [];
+    const moleculeCount = 50;
+
+    for(let i = 0; i < moleculeCount; i++) {
+        const geometry = new THREE.SphereGeometry(0.1, 32, 32);
+        const material = new THREE.MeshPhongMaterial({
+            color: 0x4ecdc4,
+            transparent: true,
+            opacity: 0.8
+        });
+        const molecule = new THREE.Mesh(geometry, material);
+        
+        molecule.position.x = (Math.random() - 0.5) * 10;
+        molecule.position.y = (Math.random() - 0.5) * 10;
+        molecule.position.z = (Math.random() - 0.5) * 10;
+        
+        molecule.velocity = new THREE.Vector3(
+            (Math.random() - 0.5) * 0.02,
+            (Math.random() - 0.5) * 0.02,
+            (Math.random() - 0.5) * 0.02
+        );
+        
+        molecules.push(molecule);
+        scene.add(molecule);
+    }
+
+    // Add lights
+    const light = new THREE.DirectionalLight(0xffffff, 1);
+    light.position.set(1, 1, 1);
+    scene.add(light);
+
+    const ambientLight = new THREE.AmbientLight(0x404040);
+    scene.add(ambientLight);
+
+    camera.position.z = 5;
+
+    // Animation
+    function animate() {
+        requestAnimationFrame(animate);
+        
+        molecules.forEach(molecule => {
+            molecule.position.add(molecule.velocity);
+            
+            // Bounce off boundaries
+            if(Math.abs(molecule.position.x) > 5) molecule.velocity.x *= -1;
+            if(Math.abs(molecule.position.y) > 5) molecule.velocity.y *= -1;
+            if(Math.abs(molecule.position.z) > 5) molecule.velocity.z *= -1;
+            
+            molecule.rotation.x += 0.01;
+            molecule.rotation.y += 0.01;
+        });
+        
+        renderer.render(scene, camera);
+    }
+
+    animate();
+
+    // Handle window resize
+    window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+</script>
+{% endblock %}

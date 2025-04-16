@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{% endblock %} - Diffusion Calculator</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            overflow-x: hidden;
+            color: #fff;
+            position: relative;
+            background: linear-gradient(45deg, #1a1a1a, #2d2d2d);
+        }
+        
+        #background-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            opacity: 0.6;
+        }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 40px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            position: relative;
+            z-index: 1;
+            color: #ffffff;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .glass-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.47);
+        }
+
+        .glass-card h2 {
+            color: #ffffff;
+            font-weight: bold;
+            margin-bottom: 1.5rem;
+            font-size: 2.5rem;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .glass-card p {
+            color: #ffffff;
+            font-size: 1.2rem;
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+
+        .animated-title {
+            font-size: 4em;
+            font-weight: bold;
+            text-align: center;
+            margin: 40px 0;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: titleGlow 2s ease-in-out infinite;
+            position: relative;
+            z-index: 1;
+        }
+
+        @keyframes titleGlow {
+            0% { text-shadow: 0 0 20px rgba(255,107,107,0.5), 0 0 20px rgba(78,205,196,0.5); }
+            50% { text-shadow: 0 0 30px rgba(255,107,107,0.8), 0 0 30px rgba(78,205,196,0.8); }
+            100% { text-shadow: 0 0 20px rgba(255,107,107,0.5), 0 0 20px rgba(78,205,196,0.5); }
+        }
+
+        .navbar {
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            position: relative;
+            z-index: 2;
+            padding: 1rem 0;
+        }
+
+        .navbar-brand {
+            font-size: 1.5rem;
+            font-weight: bold;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-link {
+            color: #ffffff !important;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .nav-link:hover {
+            color: #4ecdc4 !important;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            transition: width 0.3s ease;
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        .btn-custom {
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            border: none;
+            color: white;
+            padding: 12px 30px;
+            font-weight: 600;
+            border-radius: 30px;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-custom:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            color: white;
+        }
+        
+        .container {
+            position: relative;
+            z-index: 1;
+        }
+
+        .alert {
+            border-radius: 15px;
+            border: none;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="background-canvas"></canvas>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('main.home') }}">Calculateur de Diffusion</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    {% if current_user.is_authenticated %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('main.calculate') }}">Calculateur</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('main.history') }}">Historique</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('auth.logout') }}">Déconnexion</a>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('auth.login') }}">Connexion</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('auth.register') }}">Inscription</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} animate__animated animate__fadeIn">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Three.js chemistry animation
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({
+            canvas: document.querySelector('#background-canvas'),
+            alpha: true
+        });
+        
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+
+        // Create molecules
+        const molecules = [];
+        const moleculeCount = 15;
+        const colors = [
+            0xff6b6b, // Red
+            0x4ecdc4, // Turquoise
+            0x45b7d1, // Blue
+            0x96ceb4, // Green
+            0xffeead  // Yellow
+        ];
+
+        // Create a molecule (sphere with connecting lines)
+        function createMolecule() {
+            const group = new THREE.Group();
+            
+            // Create central atom
+            const atomGeometry = new THREE.SphereGeometry(0.1, 32, 32);
+            const atomMaterial = new THREE.MeshPhongMaterial({
+                color: colors[Math.floor(Math.random() * colors.length)],
+                shininess: 100,
+                transparent: true,
+                opacity: 0.8
+            });
+            const atom = new THREE.Mesh(atomGeometry, atomMaterial);
+            group.add(atom);
+
+            // Create electron shells
+            const shellCount = Math.floor(Math.random() * 3) + 2;
+            for (let i = 0; i < shellCount; i++) {
+                const shellGeometry = new THREE.TorusGeometry(0.2 + i * 0.1, 0.02, 16, 100);
+                const shellMaterial = new THREE.MeshPhongMaterial({
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    transparent: true,
+                    opacity: 0.3
+                });
+                const shell = new THREE.Mesh(shellGeometry, shellMaterial);
+                shell.rotation.x = Math.random() * Math.PI;
+                shell.rotation.y = Math.random() * Math.PI;
+                group.add(shell);
+            }
+
+            // Add random position and rotation
+            group.position.set(
+                (Math.random() - 0.5) * 10,
+                (Math.random() - 0.5) * 10,
+                (Math.random() - 0.5) * 10
+            );
+            group.rotation.set(
+                Math.random() * Math.PI,
+                Math.random() * Math.PI,
+                Math.random() * Math.PI
+            );
+
+            // Add velocity for animation
+            group.velocity = new THREE.Vector3(
+                (Math.random() - 0.5) * 0.02,
+                (Math.random() - 0.5) * 0.02,
+                (Math.random() - 0.5) * 0.02
+            );
+
+            return group;
+        }
+
+        // Create molecules
+        for (let i = 0; i < moleculeCount; i++) {
+            const molecule = createMolecule();
+            molecules.push(molecule);
+            scene.add(molecule);
+        }
+
+        // Add lights
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        scene.add(ambientLight);
+
+        const pointLight1 = new THREE.PointLight(0xff6b6b, 1);
+        pointLight1.position.set(5, 5, 5);
+        scene.add(pointLight1);
+
+        const pointLight2 = new THREE.PointLight(0x4ecdc4, 1);
+        pointLight2.position.set(-5, -5, -5);
+        scene.add(pointLight2);
+
+        camera.position.z = 5;
+
+        // Animation
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // Animate molecules
+            molecules.forEach(molecule => {
+                // Update position
+                molecule.position.add(molecule.velocity);
+
+                // Bounce off boundaries
+                if (Math.abs(molecule.position.x) > 5) molecule.velocity.x *= -1;
+                if (Math.abs(molecule.position.y) > 5) molecule.velocity.y *= -1;
+                if (Math.abs(molecule.position.z) > 5) molecule.velocity.z *= -1;
+
+                // Rotate molecule
+                molecule.rotation.x += 0.01;
+                molecule.rotation.y += 0.01;
+
+                // Animate electron shells
+                molecule.children.forEach((child, index) => {
+                    if (index > 0) { // Skip the central atom
+                        child.rotation.x += 0.02;
+                        child.rotation.y += 0.02;
+                    }
+                });
+            });
+
+            // Rotate lights for dynamic lighting
+            pointLight1.position.x = Math.sin(Date.now() * 0.001) * 5;
+            pointLight1.position.y = Math.cos(Date.now() * 0.001) * 5;
+            pointLight2.position.x = Math.cos(Date.now() * 0.001) * 5;
+            pointLight2.position.y = Math.sin(Date.now() * 0.001) * 5;
+
+            renderer.render(scene, camera);
+        }
+
+        animate();
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>

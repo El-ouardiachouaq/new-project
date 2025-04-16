@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block title %}Historique des Calculs{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="glass-card">
+                <h2 class="text-center mb-4">Historique des Calculs</h2>
+                
+                <div class="row mb-4">
+                    <div class="col-md-12 text-center">
+                        <a href="{{ url_for('main.calculate') }}" class="btn btn-custom btn-lg">
+                            <i class="fas fa-calculator"></i> Nouveau Calcul
+                        </a>
+                    </div>
+                </div>
+                
+                {% if calculations %}
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Date</th>
+                                <th>x_A</th>
+                                <th>T (K)</th>
+                                <th>D_AB (cm²/s)</th>
+                                <th>Erreur (%)</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for calc in calculations %}
+                            <tr>
+                                <td>{{ calc.date_created.strftime('%Y-%m-%d %H:%M') }}</td>
+                                <td>{{ "%.4f"|format(calc.x_A) }}</td>
+                                <td>{{ "%.1f"|format(calc.T) }}</td>
+                                <td>{{ "%.3e"|format(calc.result_D_AB) }}</td>
+                                <td class="{{ 'text-success' if calc.result_error < 5 else 'text-warning' if calc.result_error < 10 else 'text-danger' }}">
+                                    {{ "%.2f"|format(calc.result_error) }}
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('main.calculate') }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-redo"></i> Répéter
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="alert alert-info text-center">
+                    <p>Vous n'avez pas encore effectué de calculs.</p>
+                    <a href="{{ url_for('main.calculate') }}" class="btn btn-primary mt-2">Effectuer Votre Premier Calcul</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .table {
+        color: white;
+        border-collapse: separate;
+        border-spacing: 0;
+        width: 100%;
+        margin-bottom: 1rem;
+        background-color: rgba(255, 255, 255, 0.05);
+        border-radius: 0.5rem;
+        overflow: hidden;
+    }
+    
+    .table thead th {
+        vertical-align: bottom;
+        border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+        background-color: rgba(0, 0, 0, 0.3);
+        color: white;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.05em;
+    }
+    
+    .table tbody tr {
+        transition: all 0.3s ease;
+    }
+    
+    .table tbody tr:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+    
+    .table td, .table th {
+        padding: 0.75rem;
+        vertical-align: top;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .text-success {
+        color: #28a745 !important;
+        font-weight: bold;
+    }
+    
+    .text-warning {
+        color: #ffc107 !important;
+        font-weight: bold;
+    }
+    
+    .text-danger {
+        color: #dc3545 !important;
+        font-weight: bold;
+    }
+    
+    .btn-outline-primary {
+        color: #4ecdc4;
+        border-color: #4ecdc4;
+        background-color: transparent;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-outline-primary:hover {
+        color: white;
+        background-color: #4ecdc4;
+        border-color: #4ecdc4;
+    }
+</style>
+{% endblock %}

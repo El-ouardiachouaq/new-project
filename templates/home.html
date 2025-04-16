@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}Calculateur de Diffusion{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 text-center">
+            <h1 class="neon-name mb-5">EL-OUARDI ACHOUAQ</h1>
+            
+            <div class="glass-card">
+                <h2 class="welcome-text mb-4">Bienvenue sur le Calculateur de Diffusion</h2>
+                <p class="lead mb-5">Calculez les coefficients de diffusion avec précision et facilité.</p>
+                
+                <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-glow btn-lg px-4">Connexion</a>
+                    <a href="{{ url_for('auth.register') }}" class="btn btn-glow btn-lg px-4">Inscription</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .neon-name {
+        font-size: 3.5rem;
+        font-weight: bold;
+        text-align: center;
+        background: linear-gradient(to right, #ff69b4, #ff1493, #ff69b4);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-shadow: 
+            0 0 7px rgba(255, 105, 180, 0.7),
+            0 0 10px rgba(255, 105, 180, 0.7),
+            0 0 21px rgba(255, 105, 180, 0.7),
+            0 0 42px rgba(255, 20, 147, 0.7),
+            0 0 82px rgba(255, 20, 147, 0.5),
+            0 0 92px rgba(255, 20, 147, 0.5),
+            0 0 102px rgba(255, 105, 180, 0.5),
+            0 0 151px rgba(255, 105, 180, 0.5);
+        animation: gradient 3s ease infinite, flicker 3s infinite alternate;
+        background-size: 200% auto;
+    }
+
+    .welcome-text {
+        font-size: 2.5rem;
+        color: #fff;
+        margin-bottom: 1rem;
+        background: linear-gradient(45deg, #ff69b4, #ff1493);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .glass-card {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        padding: 40px;
+        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+    }
+
+    .btn-glow {
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(5px);
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        font-weight: 500;
+        padding: 12px 30px;
+        margin: 0 10px;
+    }
+
+    .btn-glow:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: #fff;
+        box-shadow: 0 0 20px rgba(255, 105, 180, 0.5);
+        transform: translateY(-2px);
+    }
+
+    @keyframes gradient {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    @keyframes flicker {
+        0%, 18%, 22%, 25%, 53%, 57%, 100% {
+            text-shadow: 
+                0 0 7px rgba(255, 105, 180, 0.7),
+                0 0 10px rgba(255, 105, 180, 0.7),
+                0 0 21px rgba(255, 105, 180, 0.7),
+                0 0 42px rgba(255, 20, 147, 0.7),
+                0 0 82px rgba(255, 20, 147, 0.5),
+                0 0 92px rgba(255, 20, 147, 0.5),
+                0 0 102px rgba(255, 105, 180, 0.5),
+                0 0 151px rgba(255, 105, 180, 0.5);
+        }
+        20%, 24%, 55% {
+            text-shadow: none;
+        }
+    }
+</style>
+{% endblock %}
