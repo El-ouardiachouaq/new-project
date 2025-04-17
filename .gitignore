@@ -45,4 +45,4 @@ Thumbs.db
 *.pyc
 dist/
 build/
-*.egg-info/ 
+*.egg-info/

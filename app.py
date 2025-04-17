@@ -13,8 +13,8 @@ def create_app(config_class=Config):
     app.config.from_object(config_class)
 
     # Ensure SQLALCHEMY_DATABASE_URI is set
-    if not app.config.get("SQLALCHEMY_DATABASE_URI"):
-        raise RuntimeError("The 'SQLALCHEMY_DATABASE_URI' configuration is missing. Please set it in the environment or Config class.")
+    if not os.getenv("SQLALCHEMY_DATABASE_URI"):
+        raise RuntimeError("The 'SQLALCHEMY_DATABASE_URI' environment variable is missing. Please set it in the .env file.")
 
     # Initialize extensions
     db.init_app(app)
